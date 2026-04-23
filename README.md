@@ -210,10 +210,7 @@ AKTOR:
 - Kurir        → jemput & antar paket
 - Pembeli      → terima paket, bayar COD
 
-────────────────────────────────────────
-FLOW 1: PENERIMAAN PAKET DARI SELLER
-────────────────────────────────────────
-
+#FLOW 1: PENERIMAAN PAKET DARI SELLER
 Seller datang/hubungi → Kurir/Admin input paket:
   1. Foto label paket (WAJIB) → AI OCR auto-baca data
   2. Tentukan status pembayaran:
@@ -229,30 +226,21 @@ UANG YANG BERGERAK DI SINI:
   Lunas   → Tidak ada uang bergerak
   Sebagian → Tidak ada uang bergerak (sudah DP langsung ke seller)
 
-────────────────────────────────────────
-FLOW 2: PENJEMPUTAN (PICKUP)
-────────────────────────────────────────
-
+#FLOW 2: PENJEMPUTAN (PICKUP)
 Kurir buka Task → lihat daftar seller yang perlu dijemput:
   1. Kurir ke lokasi seller
   2. Ambil semua paket dari seller
   3. Tap "Jemput Paket" per paket → status: PENDING → DIJEMPUT
   4. Kurir bawa paket ke hub/kantor sortir
 
-────────────────────────────────────────
-FLOW 3: SORTIR DI HUB
-────────────────────────────────────────
-
+#FLOW 3: SORTIR DI HUB
 Paket tiba di hub:
   1. Tap "Tiba di Sortir" → status: DIJEMPUT → DISORTIR
   2. Paket dipisah per wilayah/kurir antar
   3. Kurir antar ditugaskan
   4. Tap "Kirim Sekarang" → status: DISORTIR → DALAM PENGIRIMAN
 
-────────────────────────────────────────
-FLOW 4: PENGIRIMAN KE PEMBELI
-────────────────────────────────────────
-
+#FLOW 4: PENGIRIMAN KE PEMBELI
 Kurir antar ke alamat pembeli:
   
   SKENARIO A — BERHASIL:
@@ -276,10 +264,7 @@ Kurir antar ke alamat pembeli:
     2. Tap "Retur" → status → RETUR
     3. Talangan macet → tagih ke seller
 
-────────────────────────────────────────
-FLOW 5: REKONSILIASI KEUANGAN
-────────────────────────────────────────
-
+#FLOW 5: REKONSILIASI KEUANGAN
 Akhir hari / periode:
   
   KURIR setor ke Admin:
@@ -302,10 +287,8 @@ RUMUS KURIR:
   Pendapatan kurir      = ongkir per paket terantar
   Setor ke admin        = total COD terkumpul (bukan ongkir)
 
-────────────────────────────────────────
-FLOW 6: MONITORING (ADMIN DASHBOARD)
-────────────────────────────────────────
 
+#FLOW 6: MONITORING (ADMIN DASHBOARD)
 Dashboard real-time:
   - Total paket per status
   - Total COD beredar (talangan aktif)
@@ -319,10 +302,8 @@ Keuangan page:
   - Paket macet: seller mana yang perlu ditagih
   - Rekap periode: total pendapatan ongkir
 
-────────────────────────────────────────
-SUMMARY ALUR UANG
-────────────────────────────────────────
 
+#SUMMARY ALUR UANG
 Admin/Kurir → [Talangan] → Seller (saat pickup COD)
 Pembeli     → [COD+Ongkir] → Kurir (saat delivery)
 Kurir       → [COD] → Admin (setor harian)
