@@ -1,6 +1,6 @@
-# 🚀 Setup AI Local Developer Environment (AMD Ryzen AI)
+# 🚀 Setup AI Local Developer Environment - NPU AI
 
-Panduan ini untuk memaksimalkan **Ryzen 7 8845HS** agar bisa menjalankan AI secara lokal tanpa limit, tanpa biaya bulanan, dan mampu membaca ratusan file proyek (FE & BE) seperti Claude di Lovable / base44.
+Panduan ini untuk memaksimalkan **NPU** agar bisa menjalankan AI secara lokal tanpa limit, tanpa biaya bulanan, dan mampu membaca ratusan file proyek (FE & BE) seperti Claude di Lovable / base44.
 
 ---
 
