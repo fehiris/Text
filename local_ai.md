@@ -1,6 +1,6 @@
 # 🚀 Setup AI Local Developer Environment (AMD Ryzen AI)
 
-Panduan ini untuk memaksimalkan laptop **Lenovo IdeaPad Slim 5 (Ryzen 7 8845HS)** agar bisa menjalankan AI secara lokal tanpa limit, tanpa biaya bulanan, dan mampu membaca ratusan file proyek (FE & BE) seperti Claude di Lovable.
+Panduan ini untuk memaksimalkan **Ryzen 7 8845HS** agar bisa menjalankan AI secara lokal tanpa limit, tanpa biaya bulanan, dan mampu membaca ratusan file proyek (FE & BE) seperti Claude di Lovable / base44.
 
 ---
 
