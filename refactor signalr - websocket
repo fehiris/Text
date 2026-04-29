@@ -7,6 +7,7 @@ Backend: .NET Core
 Client: Flutter (Mobile) & React (Web).
 Constraint: Spesifikasi RAM sangat terbatas, trafik sangat tinggi, alokasi objek harus mendekati nol (Zero-allocation focus).
 Instruksi Refactor (Wajib Dipatuhi):
+Contract Consistency Result jangan lupa, Zero-Copy Writing 
 Hapus SignalR & WebSocket: Ganti dengan implementasi HTTP Streaming (SSE) murni menggunakan HttpContext.Response.Body. Jangan gunakan library pihak ketiga.
 Zero-Allocation Pipeline:
 Gunakan System.IO.Pipelines atau StreamWriter secara langsung untuk menulis ke response body.
