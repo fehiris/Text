@@ -1,28 +1,33 @@
-Tugas: Refactor SignalR ke Native SSE (Server-Sent Events) - Performa Ekstrem
+Tugas: Refactor SignalR ke Native SSE - Arsitektur "Radio Broadcaster" (Performa Ekstrem)
 Konteks Proyek
-Tujuan utama adalah efisiensi RAM dan CPU yang paling ekstrim. Karena komunikasi bersifat satu arah (Server-to-Client), kita akan meninggalkan SignalR dan WebSocket, lalu beralih ke Native SSE untuk meminimalkan overhead protokol.
+Tujuan utama adalah efisiensi RAM dan CPU yang paling ekstrem (Zero-Allocation). Sistem akan menangani trafik tinggi (sekelas data bursa saham). Kita akan meninggalkan SignalR/WebSocket dan beralih ke Native SSE dengan model "Kran/Frekuensi".
 Arsitektur Sistem
-Arah Data: Mutlak satu arah (Streaming dari Server). Client menggunakan REST API untuk interaksi balik.
-Backend: .NET Core 
-Client: Flutter (Mobile) & React (Web).
-Constraint: Spesifikasi RAM sangat terbatas, trafik sangat tinggi, alokasi objek harus mendekati nol (Zero-allocation focus).
+Arah Data: Satu arah (Server-to-Client). Client balik ke server via REST API.
+Protokol: Wajib HTTP/2 (untuk Multiplexing & Low Overhead).
+Backend: .NET Core (Minimal API).
+Constraint: RAM sangat minim, trafik sangat tinggi, alokasi objek harus mendekati nol.
 Instruksi Refactor (Wajib Dipatuhi):
-Contract Consistency Result jangan lupa, Zero-Copy Writing 
-Hapus SignalR & WebSocket: Ganti dengan implementasi HTTP Streaming (SSE) murni menggunakan HttpContext.Response.Body. Jangan gunakan library pihak ketiga.
-Zero-Allocation Pipeline:
-Gunakan System.IO.Pipelines atau StreamWriter secara langsung untuk menulis ke response body.
-Gunakan Base64 MessagePack untuk payload. Hindari serialisasi JSON string di dalam loop broadcast untuk mencegah GC Pressure.
-Wajib gunakan ReadOnlyMemory<byte> atau ArrayPool<byte> jika ada pemrosesan buffer sementara.
-Efficient Distribution via Channels:
-Gunakan System.Threading.Channels tipe Bounded sebagai buffer antrean pesan masuk.
-Jika antrean penuh, gunakan strategi DropOldest untuk menjaga stabilitas memori server.
-Stateless Lifecycle & Cleanup:
-Server tidak boleh menyimpan state client selain StreamWriter/PipeWriter dalam ConcurrentDictionary.
-Gunakan CancellationToken (RequestAborted) untuk memutus koneksi dan membersihkan resource secara instan saat client disconnect.
-Passive Reconnect (Client-Side):
-React: Gunakan native EventSource. Implementasikan exponential backoff manual untuk reconnect jika koneksi terputus.
-Flutter: Gunakan HttpClient dengan response.listen. Tangani reconnections secara pasif di sisi client tanpa melibatkan logika server.
+Hapus SignalR & WebSocket: Ganti dengan implementasi HTTP Streaming (SSE) murni melalui HttpContext.Response.Body. Dilarang menggunakan library abstraksi pihak ketiga.
+Model "Radio Frequency" (Pub/Sub):
+Ganti logika Looping manual per-user dengan model Single Stream.
+Gunakan satu System.Threading.Channels (Bounded) sebagai "Pemancar/Pipa Induk".
+Setiap request client harus langsung melakukan ReadAllAsync() dari channel pusat tersebut. Biarkan Network Stack yang menangani distribusi data, bukan loop manual di level aplikasi.
+Zero-Allocation & Pre-Serialization (Poin Penting):
+Pre-Encoded Broadcast: Objek respons wajib mengikuti kontrak { success: bool, data: object, errors: [] }.
+Serialisasi ke MessagePack (Biner) dilakukan HANYA SEKALI sebelum masuk ke channel broadcast.
+Gunakan ReadOnlyMemory<byte> untuk membungkus biner tersebut agar tidak ada duplikasi data di RAM saat diakses ribuan "pendengar" secara bersamaan.
+Zero-Copy Writing:
+Gunakan System.IO.Pipelines untuk menulis langsung biner dari memori ke Response Body.
+Hindari konversi biner ke string/Base64 di dalam proses pengiriman ke client. Kirim mentah dalam format biner jika memungkinkan, atau Base64 jika terpaksa menggunakan standar teks SSE.
+Stateless & Fast Cleanup:
+Server harus Amnesia (Stateless). Jangan simpan profil user di memori stream.
+Gunakan CancellationToken agar saat user "Tune-out" (disconnect), resource langsung dibersihkan seketika tanpa nunggu GC.
+Resilience:
+Channel harus menggunakan strategi DropOldest. Jika trafik saham membludak, buang data lama agar RAM tidak meledak. Stabilitas server adalah prioritas utama.
 Output yang Diminta:
-SseManager.cs: Class tunggal yang mengelola registrasi client dan metode BroadcastAsync yang sangat efisien.
-Minimal API Endpoint: Endpoint /stream yang ringan tanpa middleware MVC/Auth yang tidak perlu (gunakan kustom middleware jika perlu).
-Saran Tambahan: untuk memastikan HTTP/2 diaktifkan di server (Kestrel/Nginx) agar ratusan koneksi SSE bisa berjalan di atas satu koneksi TCP (multiplexing).
+SseBroadcaster.cs: Class pemancar tunggal yang mengelola Channel pusat dan metode Broadcast(byte[] data).
+Minimal API Endpoint: /realtime/stream yang sangat tipis, hanya berisi looping pasif dari ChannelReader ke Response.Body.
+Client Snippet (React & Flutter): Logika passive reconnect yang efisien.
+Kestrel Config: Contoh setup Kestrel agar mengaktifkan HTTP/2 secara paksa (H2) untuk mendukung multiplexing.
+Pro-Tip untuk Developer:
+Pastikan menggunakan Response.BodyWriter.GetMemory() saat akan menulis data untuk benar-benar mencapai status Zero-Allocation.
