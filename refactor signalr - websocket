@@ -1,22 +1,27 @@
-Tugas: Refactor SignalR ke Native WebSocket (One-Way Realtime Broker)
-
-Konteks Proyek:
-Saya ingin efisiensi RAM dan CPU yang paling ekstrim, jika memungkinkan SSE, gunakan sse.
-Arsitektur Sistem:
-Arah Data: Hanya SATU ARAH (Server ke Client). Komunikasi Client ke Server tetap menggunakan REST API.
-Teknologi: .NET Core Backend, Flutter Mobile, React FE.
-Constraint: Spesifikasi RAM minim, trafik sangat tinggi. meminimalkan alokasi memori.
-Instruksi Refactor (Fokus Performa Ekstrim):
-Hapus SignalR: Ganti total dengan middleware native app.UseWebSockets(). Jangan gunakan lapisan abstraksi apa pun.
-SRP Realtime Module: Modul ini hanya bertugas menerima pesan dari modul internal lain dan meneruskannya (broadcast/blast) ke client. Tidak ada logika bisnis atau database di sini. hanya ada log error ke db errors untuk audit
-Zero-Allocation Focus:
-Gunakan ArrayPool<byte> untuk manajemen buffer.
-Hindari alokasi string atau JSON di dalam loop broadcast.
-Kirim data dalam format biner (MessagePack) langsung ke stream WebSocket.
-Efficient Blast via Channels: Gunakan System.Threading.Channels (Bounded) sebagai antrean pesan masuk agar tidak memblokir thread utama.
-Passive Reconnect (Client-Side): Implementasikan logika auto-reconnect murni di sisi Client (Flutter & React). Server harus tetap stateless dan tidak ikut mengelola status koneksi yang putus.
-Cleanup Ketat: Gunakan CancellationToken untuk mematikan koneksi yang idle/mati secara instan agar tidak ada kebocoran memori (Memory Leak).
+Tugas: Refactor SignalR ke Native SSE (Server-Sent Events) - Performa Ekstrem
+Konteks Proyek
+Tujuan utama adalah efisiensi RAM dan CPU yang paling ekstrim. Karena komunikasi bersifat satu arah (Server-to-Client), kita akan meninggalkan SignalR dan WebSocket, lalu beralih ke Native SSE untuk meminimalkan overhead protokol.
+Arsitektur Sistem
+Arah Data: Mutlak satu arah (Streaming dari Server). Client menggunakan REST API untuk interaksi balik.
+Backend: .NET Core 
+Client: Flutter (Mobile) & React (Web).
+Constraint: Spesifikasi RAM sangat terbatas, trafik sangat tinggi, alokasi objek harus mendekati nol (Zero-allocation focus).
+Instruksi Refactor (Wajib Dipatuhi):
+Hapus SignalR & WebSocket: Ganti dengan implementasi HTTP Streaming (SSE) murni menggunakan HttpContext.Response.Body. Jangan gunakan library pihak ketiga.
+Zero-Allocation Pipeline:
+Gunakan System.IO.Pipelines atau StreamWriter secara langsung untuk menulis ke response body.
+Gunakan Base64 MessagePack untuk payload. Hindari serialisasi JSON string di dalam loop broadcast untuk mencegah GC Pressure.
+Wajib gunakan ReadOnlyMemory<byte> atau ArrayPool<byte> jika ada pemrosesan buffer sementara.
+Efficient Distribution via Channels:
+Gunakan System.Threading.Channels tipe Bounded sebagai buffer antrean pesan masuk.
+Jika antrean penuh, gunakan strategi DropOldest untuk menjaga stabilitas memori server.
+Stateless Lifecycle & Cleanup:
+Server tidak boleh menyimpan state client selain StreamWriter/PipeWriter dalam ConcurrentDictionary.
+Gunakan CancellationToken (RequestAborted) untuk memutus koneksi dan membersihkan resource secara instan saat client disconnect.
+Passive Reconnect (Client-Side):
+React: Gunakan native EventSource. Implementasikan exponential backoff manual untuk reconnect jika koneksi terputus.
+Flutter: Gunakan HttpClient dengan response.listen. Tangani reconnections secara pasif di sisi client tanpa melibatkan logika server.
 Output yang Diminta:
-WebSocketDistributor (C#): Class mandiri untuk mengelola list koneksi dan fungsi broadcast biner yang super efisien.
-Minimal Middleware: Konfigurasi app.UseWebSockets() yang ringan.
-Client Snippet: Logika reconnect sederhana untuk Flutter dan React yang tidak membebani CPU client.
+SseManager.cs: Class tunggal yang mengelola registrasi client dan metode BroadcastAsync yang sangat efisien.
+Minimal API Endpoint: Endpoint /stream yang ringan tanpa middleware MVC/Auth yang tidak perlu (gunakan kustom middleware jika perlu).
+Saran Tambahan: untuk memastikan HTTP/2 diaktifkan di server (Kestrel/Nginx) agar ratusan koneksi SSE bisa berjalan di atas satu koneksi TCP (multiplexing).
