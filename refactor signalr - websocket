@@ -1,0 +1,19 @@
+Tugas: Refactor SignalR ke Native WebSocket (One-Way Realtime Broker)
+Arsitektur Sistem:
+Arah Data: Hanya SATU ARAH (Server ke Client). Komunikasi Client ke Server tetap menggunakan REST API.
+Teknologi: .NET Core Backend, Flutter Mobile, React FE.
+Constraint: Spesifikasi RAM minim, trafik sangat tinggi. meminimalkan alokasi memori.
+Instruksi Refactor (Fokus Performa Ekstrim):
+Hapus SignalR: Ganti total dengan middleware native app.UseWebSockets(). Jangan gunakan lapisan abstraksi apa pun.
+SRP Realtime Module: Modul ini hanya bertugas menerima pesan dari modul internal lain dan meneruskannya (broadcast/blast) ke client. Tidak ada logika bisnis atau database di sini. hanya ada log error ke db errors untuk audit
+Zero-Allocation Focus:
+Gunakan ArrayPool<byte> untuk manajemen buffer.
+Hindari alokasi string atau JSON di dalam loop broadcast.
+Kirim data dalam format biner (MessagePack) langsung ke stream WebSocket.
+Efficient Blast via Channels: Gunakan System.Threading.Channels (Bounded) sebagai antrean pesan masuk agar tidak memblokir thread utama.
+Passive Reconnect (Client-Side): Implementasikan logika auto-reconnect murni di sisi Client (Flutter & React). Server harus tetap stateless dan tidak ikut mengelola status koneksi yang putus.
+Cleanup Ketat: Gunakan CancellationToken untuk mematikan koneksi yang idle/mati secara instan agar tidak ada kebocoran memori (Memory Leak).
+Output yang Diminta:
+WebSocketDistributor (C#): Class mandiri untuk mengelola list koneksi dan fungsi broadcast biner yang super efisien.
+Minimal Middleware: Konfigurasi app.UseWebSockets() yang ringan.
+Client Snippet: Logika reconnect sederhana untuk Flutter dan React yang tidak membebani CPU client.
