@@ -1,4 +1,6 @@
 Tugas: Refactor SignalR ke Native WebSocket (One-Way Realtime Broker)
+
+penting, jika memungkinkan SSE, gunakan sse.
 Arsitektur Sistem:
 Arah Data: Hanya SATU ARAH (Server ke Client). Komunikasi Client ke Server tetap menggunakan REST API.
 Teknologi: .NET Core Backend, Flutter Mobile, React FE.
